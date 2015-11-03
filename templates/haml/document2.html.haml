@@ -13,7 +13,7 @@
     - unless (attr :stylesheet, '').empty?
       %link(rel='stylesheet'){:href=>normalize_web_path((attr :stylesheet), (attr :stylesdir, ''))}
     - if attr? :icons, 'font'
-      %link(rel='stylesheet'){:href=>("#{deckjsdir}/themes/style/font.css")}
+      %link(rel='stylesheet'){:href=>(attr 'iconfont-cdn', 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css')}
       %style
         :plain
           .conum { display: inline-block; color: white !important; background-color: #222222; -webkit-border-radius: 100px; border-radius: 100px; text-align: center; width: 1.2em; height: 1.2em; font-size: 0.9em; font-weight: bold; line-height: 1.2; font-family: Arial, sans-serif; font-style: normal; position: relative; top: -0.1em; }
@@ -36,8 +36,8 @@
         - else
           =Asciidoctor::Stylesheets.instance.embed_pygments_stylesheet(attr 'pygments-style')
     - when 'highlightjs'
-      %link(rel='stylesheet' href="#{attr :highlightjsdir, 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3'}/styles/#{attr 'highlightjs-theme', 'default'}.min.css")
-      %script(src="#{attr :highlightjsdir, 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3'}/highlight.min.js")
+      %link(rel='stylesheet' href="#{attr :highlightjsdir, '//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4'}/styles/#{attr 'highlightjs-theme', 'default'}.min.css")
+      %script(src="#{attr :highlightjsdir, '//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4'}/highlight.min.js")
       %script hljs.initHighlightingOnLoad()
     - when 'prettify'
       %link(rel='stylesheet' href="#{attr :prettifydir, 'http://cdnjs.cloudflare.com/ajax/libs/prettify/r298'}/#{attr 'prettify-theme', 'prettify'}.min.css")
@@ -51,6 +51,8 @@
       %link(rel='stylesheet' media='screen' href="#{deckjsdir}/extensions/goto/deck.goto.css")
     - if attr? :menu
       %link(rel='stylesheet' media='screen' href="#{deckjsdir}/extensions/menu/deck.menu.css")
+    - if attr? :navigation
+      %link(rel='stylesheet' media='screen' href="#{deckjsdir}/extensions/navigation/deck.navigation.css")
     - if attr? :status
       %link(rel='stylesheet' media='screen' href="#{deckjsdir}/extensions/status/deck.status.css")
     - if attr? :toc
@@ -65,17 +67,12 @@
     %script(src="#{deckjsdir}/modernizr.custom.js")
   %body{:id=>@id, :class=>doctype, :style=>("max-width: #{attr 'max-width'};" if (attr? 'max-width'))}
     .deck-container
-      .deck-header
-        .flex-element.deck-course
-          %p=@header.title
-        .flex-element.deck-brand
-          %a{:href=>"http://girldevelopit.com", :target=>"blank"} Girl Develop It
       - unless noheader
-        %section.slide#title-slide
+        %section(class='slide' id='title-slide')
           - unless notitle
             %h1=@header.title
           - if attr? :author
-            %h2#author=attr :author
+            %span#author=attr :author
             %br
             - if attr? :email
               %span#email=sub_macros(attr :email)
@@ -96,10 +93,8 @@
         =content
       - if attr? :navigation
         %div(aria-role='navigation')
-          %a(href='#' class='deck-prev-link' title='Previous')
-            %i.icon-chevron-with-circle-left
-          %a(href='#' class='deck-next-link' title='Next')
-            %i.icon-chevron-with-circle-right
+          %a(href='#' class='deck-prev-link' title='Previous') &#8592;
+          %a(href='#' class='deck-next-link' title='Next') &#8594;
       - if attr? :status
         %p.deck-status(aria-role='status')
           %span.deck-status-current
@@ -113,9 +108,7 @@
           %input(type='submit' value='Go')
       - if deckjs_version <= '1.0.0'
         %a(href='.' title='Permalink to this slide' class='deck-permalink') #
-
     %script(src="#{deckjsdir}/jquery.min.js")
-    %script(src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js")
     %script(src="#{deckjsdir}/core/deck.core.js")
     - if deckjs_version <= '1.0.0'
       %script(src="#{deckjsdir}/extensions/hash/deck.hash.js")
@@ -135,38 +128,8 @@
     - if attr? :toc
       %script(src="#{deckjsdir}/extensions/toc/deck.toc.js")
       %div(class='deck-toc')
-    - if attr? :animation
-      %script(src="#{deckjsdir}/extensions/animation/deck.animation.js")
-    - if attr? :notes
-      %script(src="#{deckjsdir}/extensions/deck.js-notes/deck.notes.js")
-      %script(src="#{deckjsdir}/extensions/goto/deck.goto.js")
-      %script(src="#{deckjsdir}/extensions/clone/deck.clone.js")
-    %script(src="#{deckjsdir}/extensions/svg/svg.min.js")
     - if attr? :customjs
       %script(src="#{attr :customjs, 'customjs.js'}")
-
-
-
-    %footer
-      .deck-progressbar
-        %span
-      .flex-element.deck-notice
-        - if attr? :deckjs_theme, 'gdi'
-          %p 
-            &hearts; Girl Develop It Boulder --
-            %a{:href=>"http://creativecommons.org/licenses/by-nc/3.0/deed.en_US", :target=>"blank", :rel=>"license"}
-              %img{:src=>"http://i.creativecommons.org/l/by-nc/3.0/80x15.png"}
-        - if attr? :deckjs_theme, 'cojorado'
-          %p 
-            &hearts; COJORADO
-      - if attr? :status
-        .flex-element.deck-progress
-          %p<
-            Slide
-            %span.deck-status-current
-            of
-            %span.deck-status-total
-
     :javascript
       (function($, deck, undefined) {
         $.deck.defaults.keys['previous'] = [8, 33, 37, 39];
@@ -177,11 +140,90 @@
         });
 
         $.deck('.slide');
-        $.deck('disableScale');
       })(jQuery, 'deck');
+    :css
+      .slide.canvas-image {
+      -moz-background-size: cover;
+      -webkit-background-size: cover;
+      -o-background-size: cover;
+      background-size: cover;
+      display: -moz-box;
+      display: -webkit-box;
+      display: -ms-box;
+      display: box;
+      -moz-box-orient: vertical;
+      -webkit-box-orient: vertical;
+      -ms-box-orient: vertical;
+      box-orient: vertical;
+      -moz-box-align: start;
+      -webkit-box-align: start;
+      -ms-box-align: start;
+      box-align: start;
+      -moz-box-pack: start;
+      -webkit-box-pack: start;
+      -ms-box-pack: start;
+      box-pack: start;}
 
-    :javascript
-      $(document).bind('deck.change', function(event, from, to) {
-        var width = to / ($.deck('getSlides').length - 1) * 100;
-        $('.deck-progressbar span').css('width', width + '%');
-      });
+      .bottom-left {
+        left: 1%;
+        bottom: 20%; }
+
+      .top-left {
+        left: 1%;
+        top: 20%; }
+
+      .bottom-right {
+        right: 1%;
+        bottom: 20%; }
+
+      .top-right {
+        right: 1%;
+        top: 20%; }
+
+      .center-up {
+        right: 50%;
+        top: 1%;
+      }
+
+      .center-down {
+        right: 50%;
+        bottom: 1%;
+      }
+      .canvas-image .canvas-caption p {
+        text-align: center;
+        padding-top: 0;
+        padding: 0;
+        -moz-transform: none;
+        -webkit-transform: none;
+        -o-transform: none;
+        -ms-transform: none;
+        transform: none;
+        display: inline;
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.7);
+        font-weight: bold;
+        font-size: 58px;
+        -webkit-box-shadow: 2px 2px 2px #000;
+        -moz-box-shadow: 2px 2px 2px #000;
+        box-shadow: 2px 2px 2px #000;
+        padding: 1rem;
+        color: white; }
+      kbd.keyseq { color: #555555; }
+      kbd:not(.keyseq) {
+        display: inline-block;
+        color: #222222;
+        font-size: 0.7em;
+        line-height: 1.4;
+        background-color: #F7F7F7;
+        border: 1px solid #ccc;
+        -webkit-border-radius: 3px;
+        border-radius: 3px;
+        -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+        margin: -0.15em 0.15em 0 0.15em;
+        padding: 0.2em 0.6em;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      kbd kbd:first-child { margin-left: 0; }
+      kbd kbd:last-child { margin-right: 0; }
